@@ -17,4 +17,3 @@ mz_zip_writer_end:
 
 MZ_BEST_COMPRESSION:
     ???
-

@@ -1,7 +1,7 @@
 CC = gcc
 CFLAGS = #-DMINIZ_NO_EXPORT
 
-TARGET = smu_zip_util
+TARGET = zippy
 SRC = zip-util.c miniz/miniz/miniz.c
 
 $(TARGET): $(SRC)
