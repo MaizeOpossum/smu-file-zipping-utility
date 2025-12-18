@@ -1,17 +1,30 @@
 #include <stdio.h>
 #include <string.h>
 #include <stdbool.h>
+#include "helper.h"
 #include "miniz/miniz/miniz.h"
 
 int main(int argc, char* argv[]) {
     int n = argc;
 
-    if (n <= 2) {
-        printf("usage: zippy [output name].zip [input file(s)]\n");
+    if (n <= 1) {
+        printf("usage: zippy [input file(s)]\n");
         return -1;
     }
 
-    char * outname = argv[1];
+    if (validate_file_presence(n, argv) == -1) {
+        return -1;
+    }
+
+    char studentID[10];
+    printf("Enter your student ID: ");
+    scanf(" %9s", studentID);
+
+    // TO-DO - validate student ID
+
+    char outname[14];
+    strcpy(outname, studentID);
+    strcat(outname, ".zip");
 
     // zip file initialisation
     mz_zip_archive zip;
@@ -24,7 +37,7 @@ int main(int argc, char* argv[]) {
     }
 
     // zipping files into zip file
-    for (int i = 2; i < n; i++) {
+    for (int i = 1; i < n; i++) {
         char* filename = argv[i];
 
         FILE *fptr = fopen(filename, "rb");
