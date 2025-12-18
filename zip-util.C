@@ -7,7 +7,7 @@ int main(int argc, char* argv[]) {
     int n = argc;
 
     if (n <= 2) {
-        printf("usage: smu_zip_util [output name].zip [input file(s)]\n");
+        printf("usage: zippy [output name].zip [input file(s)]\n");
         return -1;
     }
 
