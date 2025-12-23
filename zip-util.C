@@ -4,41 +4,98 @@
 #include "helper.h"
 #include "miniz/miniz/miniz.h"
 
-int main(int argc, char* argv[]) {
-    int n = argc;
+int main() {
+    // check directory for LT_FILES
+    int FILES_cap = 0;
+    char ** FILES = get_filenames(&FILES_cap);
 
-    if (n <= 1) {
-        printf("usage: zippy [input file(s)]\n");
-        return -1;
+    char * LT_FILE_name = validate_LT_FILES_presence(FILES);
+    if (LT_FILE_name == NULL) {
+        return 1;
     }
 
-    if (validate_file_presence(n, argv) == -1) {
-        return -1;
+    FILE * LT_FILE = fopen(LT_FILE_name, "rb");;
+    if (LT_FILE == NULL) {
+        printf("Could not open %s\n", LT_FILE_name);
+        return 1;
     }
 
-    char studentID[10];
+    // get stuff from .LT_FILES
+    // check for singular files
+    char ** SINGULAR = check_SINGLE(LT_FILE);
+
+    rewind(LT_FILE);
+
+    // check for all
+    char ** ALL = check_ALL(LT_FILE);
+
+    // while(*ALL != NULL) {
+    //     printf("%s", *ALL);
+    //     ALL++;
+    // }
+
+    // hash to determine which file to involve
+    bool involve[FILES_cap];
+    for (int i = 0; i < FILES_cap; i++) {
+        involve[i] = false;
+    }
+
+    // go through list and index all
+    char ** ALLptr = ALL;
+    while (*ALLptr != NULL) {
+        for (int i = 0; i < FILES_cap; i++) {
+
+            if (strstr(FILES[i], *ALLptr) != NULL) {
+                involve[i] = true;
+            }
+        }
+
+        ALLptr++;
+    }
+
+    // go through list and index singular, noting ones that are not included
+    char ** SINGptr = SINGULAR;
+    while (*SINGptr != NULL) {
+        bool found = false;
+        
+        for (int i = 0; i < FILES_cap; i++) {
+            if (!strcasecmp(*SINGptr, FILES[i])) {
+                found = true;
+                involve[i] = true;
+            }
+        }
+
+        if (!found) {
+            printf("file not found: %s\n", *SINGptr);
+        }
+
+        SINGptr++;
+    }
+
+    // initialise zip
+    char studentID[14];
     printf("Enter your student ID: ");
     scanf(" %9s", studentID);
+    strcat(studentID, ".zip");
 
-    // TO-DO - validate student ID
-
-    char outname[14];
-    strcpy(outname, studentID);
-    strcat(outname, ".zip");
-
-    // zip file initialisation
     mz_zip_archive zip;
     memset(&zip, 0, sizeof(zip));
 
-    bool init_passed = mz_zip_writer_init_file(&zip, outname, 0);
+    bool init_passed = mz_zip_writer_init_file(&zip, studentID, 0);
     if (!init_passed) {
         printf("Error initialising zip\n");
         return -1;
     }
 
-    // zipping files into zip file
-    for (int i = 1; i < n; i++) {
-        char* filename = argv[i];
+    // zip files
+    for (int i = 0; i < FILES_cap; i++) {
+        char* filename = FILES[i];
+
+        if (involve[i] == false) {
+            continue;
+        } else {
+            printf("ZIPPED %s\n", filename);
+        }
 
         FILE *fptr = fopen(filename, "rb");
         if (fptr == NULL) {
@@ -63,5 +120,7 @@ int main(int argc, char* argv[]) {
     mz_zip_writer_finalize_archive(&zip);
     mz_zip_writer_end(&zip);
 
-    return 0;
+    free_lists(FILES);
+    free_lists(ALL);
+    free_lists(SINGULAR);
 }
